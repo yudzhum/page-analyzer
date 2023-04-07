@@ -11,8 +11,8 @@ load_dotenv()
 
 
 # enviromental variables
-secret_key = os.environ.get('SECRET_KEY')
-database_url = os.environ.get('DATABASE_URL')
+secret_key = os.getenv('SECRET_KEY')
+database_url = os.getenv('DATABASE_URL')
 
 
 @app.route('/')
