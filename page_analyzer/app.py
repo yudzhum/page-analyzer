@@ -11,10 +11,8 @@ load_dotenv()
 
 
 # enviromental variables
-config_values = {
-    'secret_key': os.getenv('SECRET_KEY'),
-    'database_url': os.getenv('DATABASE_URL')
-}
+SECRET_KEY = os.getenv('SECRET_KEY')
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 @app.route('/')
@@ -24,4 +22,6 @@ def index():
 
 @app.route('/urls')
 def urls():
-    return f'config is {config_values["secret_key"], config_values["database_url"]}'
+    if DATABASE_URL is not None:
+        return f"DATABASE_URL is load succesfully"
+    return f'DATABASE_URL is None'
