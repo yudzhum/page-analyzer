@@ -22,4 +22,4 @@ def index():
 
 @app.route('/urls')
 def urls():
-    return return f'The secret key is: {secret_key} and the database URL is: {database_url}'
+    return f'The secret key is: {secret_key} and the database URL is: {database_url}'
