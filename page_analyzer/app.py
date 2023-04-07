@@ -11,8 +11,10 @@ load_dotenv()
 
 
 # enviromental variables
-secret_key = os.getenv('SECRET_KEY')
-database_url = os.getenv('DATABASE_URL')
+config_values = {
+    'secret_key': os.getenv('SECRET_KEY'),
+    'database_url': os.getenv('DATABASE_URL')
+}
 
 
 @app.route('/')
@@ -22,4 +24,4 @@ def index():
 
 @app.route('/urls')
 def urls():
-    return f'The secret key is: {secret_key} and the database URL is: {database_url}'
+    return f'config is {config_values["secret_key"], config_values["database_url"]}'
