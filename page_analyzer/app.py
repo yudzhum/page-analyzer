@@ -1,4 +1,8 @@
-from flask import Flask, render_template
+from flask import (
+    Flask, 
+    render_template, 
+    request
+)
 import os
 from dotenv import load_dotenv
 
@@ -11,7 +15,7 @@ load_dotenv()
 
 
 # enviromental variables
-SECRET_KEY = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 
@@ -20,8 +24,8 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/urls')
-def urls():
-    if DATABASE_URL is not None:
-        return f"DATABASE_URL is load succesfully"
-    return f'DATABASE_URL is None'
+@app.post('/urls')
+def post_urls():
+    url = request.form['url']
+    return f'{url}'
+
