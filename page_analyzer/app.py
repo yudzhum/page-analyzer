@@ -1,11 +1,14 @@
 from flask import (
     Flask, 
     render_template, 
-    request
+    request, 
+    redirect,
+    url_for
 )
 import os
 import psycopg2
 from dotenv import load_dotenv
+from datetime import date
 
 
 app = Flask(__name__)
@@ -31,12 +34,18 @@ def index():
 @app.post('/urls')
 def post_urls():
     url = request.form['url']
-    return f'{url}'
+    today = date.today()
+    
+    with conn.cursor() as cursor:
+        cursor.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)", (url, today))
+
+    return redirect(url_for('get_urls'))
 
 
 @app.get('/urls')
 def get_urls():
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM urls")
-    records = cursor.fetchall()
-    return f'{records}'
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM urls")
+        records = cursor.fetchall()
+    r = records
+    return f'{r}'
