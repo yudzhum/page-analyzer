@@ -1,5 +1,7 @@
 from flask import (
-    Flask, 
+    Flask,
+    flash,
+    get_flashed_messages,
     render_template, 
     request, 
     redirect,
@@ -9,6 +11,7 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 from datetime import date
+from validators.url import url
 
 
 app = Flask(__name__)
@@ -28,18 +31,32 @@ conn = psycopg2.connect(DATABASE_URL)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    messages = get_flashed_messages(with_categories=True)
+    return render_template('index.html', messages=messages)
 
 
 @app.post('/urls')
 def post_urls():
-    url = request.form['url']
-    today = date.today()
-    
-    with conn.cursor() as cursor:
-        cursor.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)", (url, today))
+    input_url = request.form['url']
 
-    return redirect(url_for('get_urls'))
+    # URL is valid
+    if url(input_url) is True:
+    
+        # Get today date
+        today = date.today()
+    
+        # Add url to database
+        with conn.cursor() as cursor:
+            cursor.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)", (input_url, today))
+
+        return redirect(url_for('get_urls'))
+
+    #Invalid url
+    else:
+        flash('Incorrect URL', category="alert alert-danger")
+        messages = get_flashed_messages(with_categories=True)
+        return render_template('index.html', messages=messages, incorrect_url=input_url)
+
 
 
 @app.get('/urls')
