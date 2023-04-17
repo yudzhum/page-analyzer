@@ -47,16 +47,17 @@ def post_urls():
     
         # Add url to database
         with conn.cursor() as cursor:
-            cursor.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s)", (input_url, today))
+            cursor.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id", (input_url, today))
+            (recorded_id, *_) = cursor.fetchone()
 
-        return redirect(url_for('get_urls'))
+        flash('Страница успешно добавлена', category="alert alert-success")
+        return redirect(url_for('show_url', id=recorded_id))
 
     #Invalid url
     else:
-        flash('Incorrect URL', category="alert alert-danger")
+        flash('Некорректный URL', category="alert alert-danger")
         messages = get_flashed_messages(with_categories=True)
         return render_template('index.html', messages=messages, incorrect_url=input_url)
-
 
 
 @app.get('/urls')
@@ -66,3 +67,25 @@ def get_urls():
         records = cursor.fetchall()
     r = records
     return f'{r}'
+
+
+@app.get('/urls/<id>')
+def show_url(id):
+    messages = get_flashed_messages(with_categories=True)
+
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, name, created_at FROM urls WHERE id = %s", (id,))
+        (url_id, name, created_at) = cursor.fetchone()
+
+    return render_template(
+        'show_url.html',
+        messages=messages,
+        url_id=url_id,
+        name=name,
+        created_at=created_at,
+        )
+
+
+@app.post('/urls/<id>/checks')
+def url_checks(id):
+    pass
