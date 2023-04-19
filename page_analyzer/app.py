@@ -47,6 +47,7 @@ def post_urls():
     
         # Add url to database
         with conn.cursor() as cursor:
+            # Check if url already in db
             cursor.execute("SELECT id FROM urls WHERE name = %s", (input_url,))
             result = cursor.fetchone()
             if result:
@@ -54,6 +55,7 @@ def post_urls():
                 (url_id, *_) = result
                 return redirect(url_for('show_url', id=url_id))
 
+            # Add url into db
             cursor.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id", (input_url, today))
             (recorded_id, *_) = cursor.fetchone()
 
@@ -70,10 +72,10 @@ def post_urls():
 @app.get('/urls')
 def get_urls():
     with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM urls")
-        records = cursor.fetchall()
-    r = records
-    return f'{r}'
+        cursor.execute("SELECT * FROM urls ORDER BY id DESC")
+        results = cursor.fetchall()
+
+    return render_template('urls.html', data=results)
 
 
 @app.get('/urls/<id>')
