@@ -47,6 +47,13 @@ def post_urls():
     
         # Add url to database
         with conn.cursor() as cursor:
+            cursor.execute("SELECT id FROM urls WHERE name = %s", (input_url,))
+            result = cursor.fetchone()
+            if result:
+                flash('Адрес уже добавлен', category="alert alert-info")
+                (url_id, *_) = result
+                return redirect(url_for('show_url', id=url_id))
+
             cursor.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id", (input_url, today))
             (recorded_id, *_) = cursor.fetchone()
 
