@@ -1,5 +1,5 @@
 PORT ?= 8000
-DB_NAME=page_analyzer
+DB_NAME=pageanalyzer
 DB_USER=yudzhum
 
 
