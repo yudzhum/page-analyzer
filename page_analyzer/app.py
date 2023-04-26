@@ -12,6 +12,7 @@ import psycopg2
 from dotenv import load_dotenv
 from datetime import date
 from validators.url import url
+from page_analyzer.url_parser import url_parse
 
 
 app = Flask(__name__)
@@ -39,6 +40,9 @@ def index():
 def post_urls():
     input_url = request.form['url']
 
+    # Normalisation of URL
+    parsed_url = url_parse(input_url)
+
     # URL is valid
     if url(input_url) is True:
     
@@ -49,7 +53,7 @@ def post_urls():
         with psycopg2.connect(DATABASE_URL) as conn:
             with conn.cursor() as curs:
             # Check if url already in db
-                curs.execute("SELECT id FROM urls WHERE name = %s", (input_url,))
+                curs.execute("SELECT id FROM urls WHERE name = %s", (parsed_url,))
                 result = curs.fetchone()
                 if result:
                     flash('Адрес уже добавлен', category="alert alert-info")
@@ -57,7 +61,7 @@ def post_urls():
                     return redirect(url_for('show_url', id=url_id))
 
                 # Add url into db
-                curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id", (input_url, today))
+                curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id", (parsed_url, today))
                 (recorded_id, *_) = curs.fetchone()
 
             flash('Страница успешно добавлена', category="alert alert-success")
@@ -67,7 +71,7 @@ def post_urls():
     else:
         flash('Некорректный URL', category="alert alert-danger")
         messages = get_flashed_messages(with_categories=True)
-        return render_template('index.html', messages=messages, incorrect_url=input_url)
+        return render_template('index.html', messages=messages, incorrect_url=parsed_url)
 
 
 @app.get('/urls')
