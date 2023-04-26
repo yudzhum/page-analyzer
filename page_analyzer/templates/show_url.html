@@ -47,7 +47,18 @@
                 </tr>
                 </thead>
                 <tbody>
-        
+                {% if check_result %}
+                  {% for id, created_at in check_result %}
+                  <tr>
+                    <td>{{ id }}</td>
+                    <td>code</td>
+                    <td>h1</td>
+                    <td>title</td>
+                    <td>description</td>
+                    <td>{{ created_at}}</td>
+                  </tr>
+                  {% endfor %}
+                {% endif %}
                 </tbody>
             </table>
         </div>

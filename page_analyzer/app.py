@@ -78,7 +78,10 @@ def post_urls():
 def get_urls():
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as curs:
-            curs.execute("SELECT * FROM urls ORDER BY id DESC")
+            curs.execute("SELECT urls.id, urls.name, url_checks.created_at FROM urls "
+            "LEFT JOIN url_checks ON urls.id = url_checks.url_id "
+            "WHERE url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks WHERE url_checks.url_id = urls.id) "
+            "ORDER BY urls.id DESC")
             results = curs.fetchall()
 
         return render_template('urls.html', data=results)
@@ -93,15 +96,26 @@ def show_url(id):
             curs.execute("SELECT id, name, created_at FROM urls WHERE id = %s", (id,))
             (url_id, name, created_at) = curs.fetchone()
 
+            curs.execute("SELECT id, created_at FROM url_checks WHERE url_id = %s", (id,))
+            check_result = curs.fetchall()
+
         return render_template(
             'show_url.html',
             messages=messages,
             url_id=url_id,
             name=name,
             created_at=created_at,
+            check_result=check_result,
             )
 
 
 @app.post('/urls/<id>/checks')
 def url_checks(id):
-    pass
+    today = date.today()
+
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as curs:
+            curs.execute("INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s)", (id, today))
+    
+    return redirect(url_for('show_url', id=id))
+
