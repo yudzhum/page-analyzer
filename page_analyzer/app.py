@@ -80,7 +80,8 @@ def get_urls():
         with conn.cursor() as curs:
             curs.execute("SELECT urls.id, urls.name, url_checks.created_at FROM urls "
             "LEFT JOIN url_checks ON urls.id = url_checks.url_id "
-            "WHERE url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks WHERE url_checks.url_id = urls.id) "
+            "WHERE url_checks.url_id IS NULL OR "
+            "url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks WHERE url_checks.url_id = urls.id) "
             "ORDER BY urls.id DESC")
             results = curs.fetchall()
 
