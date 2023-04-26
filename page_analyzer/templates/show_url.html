@@ -32,6 +32,7 @@
 
         <h2 class="mt-5 mb-3">Проверки</h2>
             <form method="post" action="{{ url_for('url_checks', id=url_id) }}">
+                <input type="hidden"  name="url_name" value="{{ name }}">
                 <input type="submit" class="btn btn-primary" value="Запустить проверку">
             </form>
         <div>
@@ -48,10 +49,10 @@
                 </thead>
                 <tbody>
                 {% if check_result %}
-                  {% for id, created_at in check_result %}
+                  {% for id, status_code, created_at in check_result %}
                   <tr>
                     <td>{{ id }}</td>
-                    <td>code</td>
+                    <td>{{ status_code }}</td>
                     <td>h1</td>
                     <td>title</td>
                     <td>description</td>

@@ -9,7 +9,7 @@ CREATE TABLE urls (
 CREATE TABLE url_checks (
   id SERIAL PRIMARY KEY,
   url_id bigint REFERENCES urls(id),
-  status_code integer DEFAULT 200,
+  status_code integer,
   h1 VARCHAR(255),
   title text,
   description text,

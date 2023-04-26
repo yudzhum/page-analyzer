@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from datetime import date
 from validators.url import url
 from page_analyzer.url_parser import url_parse
+import requests
 
 
 app = Flask(__name__)
@@ -78,7 +79,7 @@ def post_urls():
 def get_urls():
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as curs:
-            curs.execute("SELECT urls.id, urls.name, url_checks.created_at FROM urls "
+            curs.execute("SELECT urls.id, urls.name, url_checks.created_at, url_checks.status_code FROM urls "
             "LEFT JOIN url_checks ON urls.id = url_checks.url_id "
             "WHERE url_checks.url_id IS NULL OR "
             "url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks WHERE url_checks.url_id = urls.id) "
@@ -97,7 +98,7 @@ def show_url(id):
             curs.execute("SELECT id, name, created_at FROM urls WHERE id = %s", (id,))
             (url_id, name, created_at) = curs.fetchone()
 
-            curs.execute("SELECT id, created_at FROM url_checks WHERE url_id = %s", (id,))
+            curs.execute("SELECT id, status_code, created_at FROM url_checks WHERE url_id = %s", (id,))
             check_result = curs.fetchall()
 
         return render_template(
@@ -112,11 +113,20 @@ def show_url(id):
 
 @app.post('/urls/<id>/checks')
 def url_checks(id):
-    today = date.today()
+    url_name = request.form['url_name']
+    r = requests.get(url_name)
+    # Response code is 200
+    if r.status_code == requests.codes.ok:
 
-    with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as curs:
-            curs.execute("INSERT INTO url_checks (url_id, created_at) VALUES (%s, %s)", (id, today))
+        today = date.today()
+
+        with psycopg2.connect(DATABASE_URL) as conn:
+            with conn.cursor() as curs:
+                curs.execute("INSERT INTO url_checks (url_id, status_code, created_at) VALUES (%s, %s, %s)", (id, r.status_code, today,))
     
-    return redirect(url_for('show_url', id=id))
+        return redirect(url_for('show_url', id=id))
+    # Response code not 200
+    else:
+        flash('Произошла ошибка при проверке', category="alert alert-danger")
+
 

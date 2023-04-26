@@ -22,12 +22,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for id, name, created_at in data %}
+                {% for id, name, created_at, status_code in data %}
                     <tr>
                         <td> {{ id }}</td>
                         <td> <a href="{{ url_for('show_url', id=id)}}"> {{ name }}</td>
                         <td>{{ created_at }}</td>
-                        <td>status_code</td>
+                        <td>{{ status_code }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
