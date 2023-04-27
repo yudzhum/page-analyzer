@@ -14,6 +14,7 @@ from datetime import date
 from validators.url import url
 from page_analyzer.url_parser import url_parse
 import requests
+from page_analyzer.data_parser import get_url_data
 
 
 app = Flask(__name__)
@@ -98,7 +99,7 @@ def show_url(id):
             curs.execute("SELECT id, name, created_at FROM urls WHERE id = %s", (id,))
             (url_id, name, created_at) = curs.fetchone()
 
-            curs.execute("SELECT id, status_code, created_at FROM url_checks WHERE url_id = %s", (id,))
+            curs.execute("SELECT * FROM url_checks WHERE url_id = %s", (id,))
             check_result = curs.fetchall()
 
         return render_template(
@@ -117,13 +118,16 @@ def url_checks(id):
     r = requests.get(url_name)
     # Response code is 200
     if r.status_code == requests.codes.ok:
-
+        # Get date
         today = date.today()
+        # Get data from url
+        h1, title, description = get_url_data(r.text)
 
         with psycopg2.connect(DATABASE_URL) as conn:
             with conn.cursor() as curs:
-                curs.execute("INSERT INTO url_checks (url_id, status_code, created_at) VALUES (%s, %s, %s)", (id, r.status_code, today,))
+                curs.execute("INSERT INTO url_checks (url_id, status_code, h1, title, description, created_at) VALUES (%s, %s, %s, %s, %s, %s)", (id, r.status_code, h1, title, description, today,))
     
+        flash('Страница успешно проверена', category='alert alert-success')
         return redirect(url_for('show_url', id=id))
     # Response code not 200
     else:
