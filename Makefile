@@ -6,7 +6,7 @@ DB_USER=yudzhum
 install:
 	poetry install
 
-build-db:
+db-build:
 		db-drop db-create schema-load
 
 db-drop:
@@ -30,3 +30,6 @@ start:
 
 dev:
 	poetry run flask --app page_analyzer:app run
+
+lint:
+	poetry run flake8 page_analyzer

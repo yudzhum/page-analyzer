@@ -1,12 +1,14 @@
-# import requests
 from bs4 import BeautifulSoup
 
 
-# r = requests.get("http://geoguessr.com/")
-
-# print(r.text)
-
 def get_url_data(data):
+    """
+    Take html data, lood for tags:
+    h1, title, meta property="og:description",
+    return values of those tags,
+    if tag not found in data,
+    return value of tag as None
+    """
     soup = BeautifulSoup(data, "html.parser")
 
     h1 = soup.find('h1')

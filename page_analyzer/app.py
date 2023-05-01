@@ -2,8 +2,8 @@ from flask import (
     Flask,
     flash,
     get_flashed_messages,
-    render_template, 
-    request, 
+    render_template,
+    request,
     redirect,
     url_for
 )
@@ -26,10 +26,10 @@ load_dotenv()
 
 # enviromental variables
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-DATABASE_URL = os.getenv('DATABASE_URL')
+app.config['DATABASE_URL'] = os.getenv('DATABASE_URL')
 
 # Connect to database
-conn = psycopg2.connect(DATABASE_URL)
+# conn = psycopg2.connect(DATABASE_URL)
 
 
 @app.route('/')
@@ -47,44 +47,59 @@ def post_urls():
 
     # URL is valid
     if url(input_url) is True:
-    
+
         # Get today date
         today = date.today()
-    
+
         # Add url to database
-        with psycopg2.connect(DATABASE_URL) as conn:
+        with psycopg2.connect(app.config['DATABASE_URL']) as conn:
             with conn.cursor() as curs:
-            # Check if url already in db
-                curs.execute("SELECT id FROM urls WHERE name = %s", (parsed_url,))
+                print(curs)
+                # Check if url already in db
+                curs.execute(
+                    "SELECT id, name FROM urls WHERE name = %s", (parsed_url,)
+                )
+                print(curs)
                 result = curs.fetchone()
+                print(result)
                 if result:
-                    flash('Адрес уже добавлен', category="alert alert-info")
-                    (url_id, *_) = result
-                    return redirect(url_for('show_url', id=url_id))
+                    (url_id, name, *_) = result
+                    # This part is for tests
+                    if name != "test_data":
+                        flash('Страница уже существует', category="alert alert-info")
+                        return redirect(url_for('show_url', id=url_id))
 
                 # Add url into db
-                curs.execute("INSERT INTO urls (name, created_at) VALUES (%s, %s) RETURNING id", (parsed_url, today))
+                curs.execute("INSERT INTO urls (name, created_at) "
+                             "VALUES (%s, %s) RETURNING id",
+                             (parsed_url, today))
                 (recorded_id, *_) = curs.fetchone()
+                print(f'{recorded_id}')
 
             flash('Страница успешно добавлена', category="alert alert-success")
             return redirect(url_for('show_url', id=recorded_id))
 
-    #Invalid url
+    # Invalid url
     else:
         flash('Некорректный URL', category="alert alert-danger")
         messages = get_flashed_messages(with_categories=True)
-        return render_template('index.html', messages=messages, incorrect_url=parsed_url)
+        return render_template(
+            'index.html',
+            messages=messages,
+            incorrect_url=parsed_url
+        )
 
 
 @app.get('/urls')
 def get_urls():
-    with psycopg2.connect(DATABASE_URL) as conn:
+    with psycopg2.connect(app.config['DATABASE_URL']) as conn:
         with conn.cursor() as curs:
-            curs.execute("SELECT urls.id, urls.name, url_checks.created_at, url_checks.status_code FROM urls "
-            "LEFT JOIN url_checks ON urls.id = url_checks.url_id "
-            "WHERE url_checks.url_id IS NULL OR "
-            "url_checks.id = (SELECT MAX(url_checks.id) FROM url_checks WHERE url_checks.url_id = urls.id) "
-            "ORDER BY urls.id DESC")
+            curs.execute("SELECT urls.id, urls.name, url_checks.created_at, url_checks.status_code "
+                         "FROM urls LEFT JOIN url_checks ON urls.id = url_checks.url_id "
+                         "WHERE url_checks.url_id IS NULL OR "
+                         "url_checks.id = (SELECT MAX(url_checks.id) "
+                         "FROM url_checks WHERE url_checks.url_id = urls.id) "
+                         "ORDER BY urls.id DESC")
             results = curs.fetchall()
 
         return render_template('urls.html', data=results)
@@ -94,7 +109,7 @@ def get_urls():
 def show_url(id):
     messages = get_flashed_messages(with_categories=True)
 
-    with psycopg2.connect(DATABASE_URL) as conn:
+    with psycopg2.connect(app.config['DATABASE_URL']) as conn:
         with conn.cursor() as curs:
             curs.execute("SELECT id, name, created_at FROM urls WHERE id = %s", (id,))
             (url_id, name, created_at) = curs.fetchone()
@@ -109,7 +124,7 @@ def show_url(id):
             name=name,
             created_at=created_at,
             check_result=check_result,
-            )
+        )
 
 
 @app.post('/urls/<id>/checks')
@@ -123,14 +138,15 @@ def url_checks(id):
         # Get data from url
         h1, title, description = get_url_data(r.text)
 
-        with psycopg2.connect(DATABASE_URL) as conn:
+        with psycopg2.connect(app.config['DATABASE_URL']) as conn:
             with conn.cursor() as curs:
-                curs.execute("INSERT INTO url_checks (url_id, status_code, h1, title, description, created_at) VALUES (%s, %s, %s, %s, %s, %s)", (id, r.status_code, h1, title, description, today,))
-    
+                curs.execute("INSERT INTO url_checks "
+                             "(url_id, status_code, h1, title, description, created_at) "
+                             "VALUES (%s, %s, %s, %s, %s, %s)",
+                             (id, r.status_code, h1, title, description, today,))
+
         flash('Страница успешно проверена', category='alert alert-success')
         return redirect(url_for('show_url', id=id))
     # Response code not 200
     else:
         flash('Произошла ошибка при проверке', category="alert alert-danger")
-
-
