@@ -15,9 +15,8 @@ def get_url_data(data):
     if h1 is not None:
         h1 = h1.get_text()
 
-    title = soup.title.string
+    title = soup.title.string if soup.title else None
 
-    description = soup.find('meta', property="og:description")
-    if description is not None:
-        description = description.get('content')
+    descript = soup.find('meta', attrs={"name": "description"})
+    description = descript.get('content') if descript else None
     return (h1, title, description)

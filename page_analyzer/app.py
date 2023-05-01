@@ -87,7 +87,7 @@ def post_urls():
             'index.html',
             messages=messages,
             incorrect_url=parsed_url
-        )
+        ), 422
 
 
 @app.get('/urls')
