@@ -105,7 +105,7 @@ def get_urls():
         return render_template('urls.html', data=results)
 
 
-@app.get('/urls/<id>')
+@app.get('/urls/<int:id>')
 def show_url(id):
     messages = get_flashed_messages(with_categories=True)
 
@@ -127,10 +127,17 @@ def show_url(id):
         )
 
 
-@app.post('/urls/<id>/checks')
+@app.post('/urls/<int:id>/checks')
 def url_checks(id):
     url_name = request.form['url_name']
-    r = requests.get(url_name)
+
+    try:
+        r = requests.get(url_name)
+
+    except requests.exceptions.RequestException:
+        flash('Произошла ошибка при проверке', category="alert alert-danger")
+        return redirect(url_for('show_url', id=id))
+    
     # Response code is 200
     if r.status_code == requests.codes.ok:
         # Get date
@@ -148,5 +155,5 @@ def url_checks(id):
         flash('Страница успешно проверена', category='alert alert-success')
         return redirect(url_for('show_url', id=id))
     # Response code not 200
-    else:
-        flash('Произошла ошибка при проверке', category="alert alert-danger")
+    # else:
+      #  flash('Произошла ошибка при проверке', category="alert alert-danger")
