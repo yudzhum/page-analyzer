@@ -5,4 +5,6 @@
 ### Test coverage
 [![Test Coverage](https://api.codeclimate.com/v1/badges/647510c568941a372d33/test_coverage)](https://codeclimate.com/github/yudzhum/python-project-83/test_coverage)
 
+![check](https://github.com/github/docs/actions/workflows/check.yml/badge.svg)
+
 [Page analyzer](https://python-project-83-production-ea1c.up.railway.app/)
