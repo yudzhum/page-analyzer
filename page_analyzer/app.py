@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from datetime import date
 from validators.url import url
 from page_analyzer.url_parser import url_parse
-import requests
+from page_analyzer.make_requests import safe_request
 from page_analyzer.data_parser import get_url_data
 
 
@@ -131,29 +131,22 @@ def show_url(id):
 def url_checks(id):
     url_name = request.form['url_name']
 
-    try:
-        r = requests.get(url_name)
-
-    except requests.exceptions.RequestException:
+    req_result = safe_request(url_name)
+    if req_result is None:
         flash('Произошла ошибка при проверке', category="alert alert-danger")
         return redirect(url_for('show_url', id=id))
-    
-    # Response code is 200
-    if r.status_code == requests.codes.ok:
-        # Get date
-        today = date.today()
-        # Get data from url
-        h1, title, description = get_url_data(r.text)
 
-        with psycopg2.connect(app.config['DATABASE_URL']) as conn:
-            with conn.cursor() as curs:
-                curs.execute("INSERT INTO url_checks "
-                             "(url_id, status_code, h1, title, description, created_at) "
-                             "VALUES (%s, %s, %s, %s, %s, %s)",
-                             (id, r.status_code, h1, title, description, today,))
+    # Get date
+    today = date.today()
+    # Get data from url
+    h1, title, description = get_url_data(req_result.text)
 
-        flash('Страница успешно проверена', category='alert alert-success')
-        return redirect(url_for('show_url', id=id))
-    # Response code not 200
-    # else:
-      #  flash('Произошла ошибка при проверке', category="alert alert-danger")
+    with psycopg2.connect(app.config['DATABASE_URL']) as conn:
+        with conn.cursor() as curs:
+            curs.execute("INSERT INTO url_checks "
+                         "(url_id, status_code, h1, title, description, created_at) "
+                         "VALUES (%s, %s, %s, %s, %s, %s)",
+                         (id, req_result.status_code, h1, title, description, today,))
+
+    flash('Страница успешно проверена', category='alert alert-success')
+    return redirect(url_for('show_url', id=id))
