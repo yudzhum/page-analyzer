@@ -5,7 +5,7 @@
 ![Github Actions Status](https://github.com/yudzhum/python-project-83/actions/workflows/check.yml/badge.svg)
 
 ## Page analyzer - a site that analyzes web pages for SEO suitability
-[Page analyzer](https://python-project-83-production-ea1c.up.railway.app/)
+[Page analyzer](https://python-project-83-production-3b68.up.railway.app/)
 ---
 ## Tech stack
 
