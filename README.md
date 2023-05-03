@@ -4,10 +4,11 @@
 [![Test Coverage](https://api.codeclimate.com/v1/badges/647510c568941a372d33/test_coverage)](https://codeclimate.com/github/yudzhum/python-project-83/test_coverage)
 ![Github Actions Status](https://github.com/yudzhum/python-project-83/actions/workflows/check.yml/badge.svg)
 
-## Page analyzer - a site that analyzes said pages for SEO suitability
+## Page analyzer - a site that analyzes web pages for SEO suitability
 [Page analyzer](https://python-project-83-production-ea1c.up.railway.app/)
 ---
-**Tech stack**
+## Tech stack
+---
 python = "^3.8"
 flask = "^2.2.3"
 gunicorn = "^20.1.0"
