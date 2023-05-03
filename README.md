@@ -8,12 +8,12 @@
 [Page analyzer](https://python-project-83-production-ea1c.up.railway.app/)
 ---
 ## Tech stack
----
-python = "^3.8"
-flask = "^2.2.3"
-gunicorn = "^20.1.0"
-python-dotenv = "^1.0.0"
-psycopg2-binary = "^2.9.6"
-validators = "^0.20.0"
-requests = "^2.29.0"
-beautifulsoup4 = "^4.12.2"
+
+- python = "^3.8"
+- flask = "^2.2.3"
+- gunicorn = "^20.1.0"
+- python-dotenv = "^1.0.0"
+- psycopg2-binary = "^2.9.6"
+- validators = "^0.20.0"
+- requests = "^2.29.0"
+- beautifulsoup4 = "^4.12.2"
