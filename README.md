@@ -21,4 +21,4 @@
  Clone repository:\
  `git clone git@github.com:yudzhum/python-project-83.git`\
  Install poetry:\
- `make install`\
+ `make install`
