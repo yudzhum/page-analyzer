@@ -19,4 +19,4 @@ def get_url_data(data):
 
     descript = soup.find('meta', attrs={"name": "description"})
     description = descript.get('content') if descript else None
-    return (h1, title, description)
+    return {'h1': h1, 'title': title, 'description': description}

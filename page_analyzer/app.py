@@ -8,28 +8,26 @@ from flask import (
     url_for
 )
 import os
-import psycopg2
 from dotenv import load_dotenv
 from datetime import date
-from validators.url import url
-from page_analyzer.url_parser import url_parse
-from page_analyzer.make_requests import safe_request
-from page_analyzer.data_parser import get_url_data
-
+from page_analyzer.url import url_parse, url_validation, make_check
+from page_analyzer.db_access import (
+    get_id_from_urls,
+    add_url_into_db,
+    get_urls_data,
+    get_url_info,
+    get_check_info,
+    insert_check_result
+)
 
 app = Flask(__name__)
 
 
-# load enviromental variables
 load_dotenv()
-
 
 # enviromental variables
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['DATABASE_URL'] = os.getenv('DATABASE_URL')
-
-# Connect to database
-# conn = psycopg2.connect(DATABASE_URL)
 
 
 @app.route('/')
@@ -41,112 +39,70 @@ def index():
 @app.post('/urls')
 def post_urls():
     input_url = request.form['url']
+    validation = url_validation(input_url)
 
-    # Normalisation of URL
-    parsed_url = url_parse(input_url)
-
-    # URL is valid
-    if url(input_url) is True:
-
-        # Get today date
-        today = date.today()
-
-        # Add url to database
-        with psycopg2.connect(app.config['DATABASE_URL']) as conn:
-            with conn.cursor() as curs:
-                print(curs)
-                # Check if url already in db
-                curs.execute(
-                    "SELECT id, name FROM urls WHERE name = %s", (parsed_url,)
-                )
-                print(curs)
-                result = curs.fetchone()
-                print(result)
-                if result:
-                    (url_id, name, *_) = result
-                    # This part is for tests
-                    if name != "test_data":
-                        flash('Страница уже существует', category="alert alert-info")
-                        return redirect(url_for('show_url', id=url_id))
-
-                # Add url into db
-                curs.execute("INSERT INTO urls (name, created_at) "
-                             "VALUES (%s, %s) RETURNING id",
-                             (parsed_url, today))
-                (recorded_id, *_) = curs.fetchone()
-                print(f'{recorded_id}')
-
-            flash('Страница успешно добавлена', category="alert alert-success")
-            return redirect(url_for('show_url', id=recorded_id))
-
-    # Invalid url
-    else:
-        flash('Некорректный URL', category="alert alert-danger")
+    if not validation.get('valid'):
+        alert_message = validation.get('message')
+        flash(f'{alert_message}', category="alert alert-danger")
         messages = get_flashed_messages(with_categories=True)
         return render_template(
             'index.html',
             messages=messages,
-            incorrect_url=parsed_url
+            incorrect_url=input_url
         ), 422
+
+    parsed_url = url_parse(input_url)
+    today = date.today()
+
+    result = get_id_from_urls(parsed_url)
+    if result:
+        (url_id, *_) = result
+        flash('Страница уже существует', category="alert alert-info")
+        return redirect(url_for('show_url', id=url_id))
+
+    else:
+        id_info = add_url_into_db(parsed_url, today)
+        (url_id, *_) = id_info
+
+        flash('Страница успешно добавлена', category="alert alert-success")
+        return redirect(url_for('show_url', id=url_id))
 
 
 @app.get('/urls')
 def get_urls():
-    with psycopg2.connect(app.config['DATABASE_URL']) as conn:
-        with conn.cursor() as curs:
-            curs.execute("SELECT urls.id, urls.name, url_checks.created_at, url_checks.status_code "
-                         "FROM urls LEFT JOIN url_checks ON urls.id = url_checks.url_id "
-                         "WHERE url_checks.url_id IS NULL OR "
-                         "url_checks.id = (SELECT MAX(url_checks.id) "
-                         "FROM url_checks WHERE url_checks.url_id = urls.id) "
-                         "ORDER BY urls.id DESC")
-            results = curs.fetchall()
-
-        return render_template('urls.html', data=results)
+    data = get_urls_data()
+    return render_template('urls.html', data=data)
 
 
 @app.get('/urls/<int:id>')
 def show_url(id):
     messages = get_flashed_messages(with_categories=True)
 
-    with psycopg2.connect(app.config['DATABASE_URL']) as conn:
-        with conn.cursor() as curs:
-            curs.execute("SELECT id, name, created_at FROM urls WHERE id = %s", (id,))
-            (url_id, name, created_at) = curs.fetchone()
+    (url_id, name, created_at) = get_url_info(id)
+    check_result = get_check_info(id)
 
-            curs.execute("SELECT * FROM url_checks WHERE url_id = %s", (id,))
-            check_result = curs.fetchall()
-
-        return render_template(
-            'show_url.html',
-            messages=messages,
-            url_id=url_id,
-            name=name,
-            created_at=created_at,
-            check_result=check_result,
-        )
+    return render_template(
+        'show_url.html',
+        messages=messages,
+        url_id=url_id,
+        name=name,
+        created_at=created_at,
+        check_result=check_result,
+    )
 
 
 @app.post('/urls/<int:id>/checks')
 def url_checks(id):
     url_name = request.form['url_name']
 
-    req_result = safe_request(url_name)
-    if req_result is None:
+    check_result = make_check(url_name)
+
+    if check_result is None:
         flash('Произошла ошибка при проверке', category="alert alert-danger")
         return redirect(url_for('show_url', id=id))
 
-    # Get date
     today = date.today()
-    # Get data from url
-    h1, title, description = get_url_data(req_result.text)
-
-    with psycopg2.connect(app.config['DATABASE_URL']) as conn:
-        with conn.cursor() as curs:
-            curs.execute("INSERT INTO url_checks "
-                         "(url_id, status_code, h1, title, description, created_at) "
-                         "VALUES (%s, %s, %s, %s, %s, %s)",
-                         (id, req_result.status_code, h1, title, description, today,))
+    insert_check_result(id, check_result, today)
 
     flash('Страница успешно проверена', category='alert alert-success')
     return redirect(url_for('show_url', id=id))
