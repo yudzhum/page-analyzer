@@ -17,3 +17,9 @@
 - validators = "^0.20.0"
 - requests = "^2.29.0"
 - beautifulsoup4 = "^4.12.2"
+
+## Setup
+ Clone repository:\
+ `git clone git@github.com:yudzhum/python-project-83.git`\
+ Install poetry:\
+ `make install`\
