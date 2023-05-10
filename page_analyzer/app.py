@@ -11,7 +11,7 @@ import os
 from dotenv import load_dotenv
 from datetime import date
 from page_analyzer.url import url_parse, url_validation, make_check
-from page_analyzer.db_access import (
+from page_analyzer.db import (
     get_id_from_urls,
     add_url_into_db,
     get_urls_data,
