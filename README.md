@@ -19,6 +19,6 @@
 
 ## Setup
  Clone repository:\
- `git clone git@github.com:yudzhum/python-project-83.git`\
+ `git clone git@github.com:yudzhum/page-analyzer.git`\
  Install poetry:\
  `make install`
