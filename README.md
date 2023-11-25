@@ -18,10 +18,13 @@
 - beautifulsoup4 = "^4.12.2"
 
 ## Setup
- Clone repository:\
+1. Clone repository:\
  `git clone git@github.com:yudzhum/page-analyzer.git`\
- Install poetry:\
+2. Install poetry:\
  `make install`
+3. Create `.env` file for enviromental variables storage\
+4. Create a new PostgreSQL database\
+ `make db-build `
 
 ## Usage
 `make start`
