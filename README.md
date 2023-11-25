@@ -22,3 +22,6 @@
  `git clone git@github.com:yudzhum/page-analyzer.git`\
  Install poetry:\
  `make install`
+
+## Usage
+`make start`
